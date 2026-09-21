@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Pendataan Tas GenBI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bi: {
+            navy: '#002B5C',
+            blue: '#00569D',
+            sky: '#2E7BC4',
+            ice: '#EAF1FA',
+            gold: '#F5A623',
+            golddark: '#C97F0A',
+            cream: '#F5F7FA',
+            line: '#E2E8F0',
+            green: '#1E9E6A',
+          },
+        },
+        fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<style>
+  [hidden] { display: none !important; }
+  .bi-stripe {
+    background-image: repeating-linear-gradient(135deg, rgba(245,166,35,.9) 0 10px, rgba(245,166,35,0) 10px 20px);
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+    transform: translateX(-100%);
+    animation: sh 2.2s infinite;
+  }
+  @keyframes sh { 100% { transform: translateX(100%); } }
+  .fade-in { animation: fi .25s ease-out; }
+  @keyframes fi { from { opacity: 0; transform: translateY(4px); } }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+</style>
+</head>
+<body class="bg-bi-cream text-slate-800 font-sans antialiased">
+
+<!-- ============ TOAST ============ -->
+<div id="toastWrap" class="fixed z-[80] bottom-4 right-4 left-4 sm:left-auto sm:w-96 space-y-2"></div>
+
+<!-- ============ LOADING ============ -->
+<div id="screenLoading" class="fixed inset-0 z-[70] grid place-items-center bg-bi-navy">
+  <div class="text-center">
+    <div class="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-bi-gold to-bi-golddark grid place-items-center text-bi-navy font-extrabold text-xl shadow-lg">BI</div>
+    <p class="mt-4 text-white/80 text-sm">Memuat…</p>
+  </div>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="screenLogin" hidden class="min-h-screen grid lg:grid-cols-2">
+  <div class="hidden lg:flex flex-col justify-between bg-bi-navy text-white p-12 relative overflow-hidden">
+    <div class="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-bi-blue/40 blur-3xl"></div>
+    <div class="absolute -left-16 bottom-0 h-72 w-72 rounded-full bg-bi-gold/20 blur-3xl"></div>
+    <div class="relative flex items-center gap-3">
+      <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-bi-gold to-bi-golddark grid place-items-center text-bi-navy font-extrabold text-lg">BI</div>
+      <div>
+        <p class="font-bold leading-tight">GenBI</p>
+        <p class="text-xs text-white/60">Bank Indonesia</p>
+      </div>
+    </div>
+    <div class="relative">
+      <h1 class="text-4xl font-extrabold leading-tight">Pendataan<br />Pengambilan Tas</h1>
+      <p class="mt-4 text-white/70 max-w-md">Kelola data penerima Beasiswa Bank Indonesia dan pantau siapa saja yang sudah mengambil tas.</p>
+      <div class="mt-8 h-1 w-24 rounded-full bi-stripe"></div>
+    </div>
+    <p class="relative text-xs text-white/40">Sistem internal panitia GenBI</p>
+  </div>
+
+  <div class="flex items-center justify-center p-6">
+    <form id="formLogin" class="w-full max-w-sm">
+      <div class="lg:hidden mb-6 flex items-center gap-3">
+        <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-bi-gold to-bi-golddark grid place-items-center text-bi-navy font-extrabold">BI</div>
+        <div>
+          <p class="font-bold leading-tight">GenBI</p>
+          <p class="text-xs text-slate-500">Pendataan Tas</p>
+        </div>
+      </div>
+      <h2 class="text-2xl font-extrabold text-bi-navy">Masuk Panel Admin</h2>
+      <p class="mt-1 text-sm text-slate-500">Gunakan akun admin panitia.</p>
+
+      <label class="mt-6 block text-sm font-semibold text-slate-700">Email</label>
+      <input id="loginEmail" type="email" required autocomplete="username"
+        class="mt-1 w-full rounded-xl border border-bi-line bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-bi-blue/40 focus:border-bi-blue" placeholder="admin@genbi.id" />
+
+      <label class="mt-4 block text-sm font-semibold text-slate-700">Kata sandi</label>
+      <input id="loginPassword" type="password" required autocomplete="current-password"
+        class="mt-1 w-full rounded-xl border border-bi-line bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-bi-blue/40 focus:border-bi-blue" placeholder="••••••••" />
+
+      <p id="loginError" hidden class="mt-3 text-sm text-red-600"></p>
+
+      <button id="btnLogin" type="submit"
+        class="mt-6 w-full rounded-xl bg-bi-navy px-4 py-3 font-semibold text-white hover:bg-bi-blue transition disabled:opacity-60">
+        Masuk
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="screenApp" hidden class="min-h-screen">
+
+  <div id="demoBanner" hidden class="bg-bi-gold/15 border-b border-bi-gold/30 text-bi-golddark text-xs sm:text-sm px-4 py-2 text-center">
+    Mode demo — Supabase belum dikonfigurasi. Data disimpan sementara di perangkat ini. Isi <code class="font-mono">config.js</code> untuk mode produksi.
+  </div>
+
+  <header class="sticky top-0 z-40 bg-gradient-to-r from-bi-navy via-bi-navy to-bi-blue text-white shadow-lg">
+    <div class="mx-auto max-w-6xl px-4">
+      <div class="flex h-16 items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-bi-gold to-bi-golddark grid place-items-center text-bi-navy font-extrabold">BI</div>
+          <div class="min-w-0">
+            <p class="font-bold leading-tight truncate">Pendataan Tas GenBI</p>
+            <p class="text-[11px] text-white/60 leading-tight">Beasiswa Bank Indonesia</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="navPetugas" class="hidden sm:flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 px-3 py-1.5 text-sm transition">
+            <span class="h-2 w-2 rounded-full bg-bi-gold"></span>
+            <span id="navPetugasName" class="max-w-[10rem] truncate">Petugas</span>
+          </button>
+          <button id="btnLogout" class="rounded-full bg-white/10 hover:bg-white/20 px-3 py-1.5 text-sm transition">Keluar</button>
+        </div>
+      </div>
+      <div class="h-1 -mb-px bi-stripe"></div>
+
+      <nav class="flex gap-1 -mb-px">
+        <button data-tab="dashboard" id="tabDashboard"
+          class="tab-btn rounded-t-lg px-4 py-2.5 text-sm font-semibold border-b-2 border-bi-gold text-white">
+          Dashboard
+        </button>
+        <button data-tab="fast" id="tabFast"
+          class="tab-btn rounded-t-lg px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-white/60 hover:text-white">
+          Ambil Cepat
+        </button>
+        <button id="navPetugasMobile" class="sm:hidden ml-auto my-1 rounded-full bg-white/10 px-3 py-1 text-xs">Petugas</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6">
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="viewDashboard">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="relative overflow-hidden rounded-2xl bg-white ring-1 ring-bi-line p-5 shadow-sm">
+          <div class="absolute left-0 top-0 h-full w-1.5 bg-bi-blue"></div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Penerima</p>
+          <p id="statTotal" class="mt-2 text-3xl font-extrabold text-bi-navy">0</p>
+        </div>
+        <div class="relative overflow-hidden rounded-2xl bg-white ring-1 ring-bi-line p-5 shadow-sm">
+          <div class="absolute left-0 top-0 h-full w-1.5 bg-bi-green"></div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sudah Ambil</p>
+          <p id="statSudah" class="mt-2 text-3xl font-extrabold text-bi-green">0</p>
+        </div>
+        <div class="relative overflow-hidden rounded-2xl bg-white ring-1 ring-bi-line p-5 shadow-sm">
+          <div class="absolute left-0 top-0 h-full w-1.5 bg-bi-gold"></div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Belum Ambil</p>
+          <p id="statBelum" class="mt-2 text-3xl font-extrabold text-bi-golddark">0</p>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-2xl bg-white ring-1 ring-bi-line p-5 shadow-sm">
+        <div class="flex items-center justify-between text-sm">
+          <span class="font-semibold text-bi-navy">Progress Pengambilan</span>
+          <span id="statProgressText" class="font-bold text-bi-navy">0 dari 0 orang</span>
+        </div>
+        <div class="mt-3 h-3 w-full overflow-hidden rounded-full bg-bi-ice">
+          <div id="statProgressBar" class="shimmer relative h-full w-0 rounded-full bg-gradient-to-r from-bi-blue to-bi-sky transition-all duration-500"></div>
+        </div>
+        <p id="statPercent" class="mt-2 text-right text-xs font-semibold text-slate-500">0%</p>
+      </div>
+
+      <div class="mt-5 flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="searchInput" type="search" placeholder="Cari nama atau jurusan…"
+              class="w-full rounded-xl border border-bi-line bg-white py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-bi-blue/40 focus:border-bi-blue" />
+          </div>
+          <select id="filterStatus" class="rounded-xl border border-bi-line bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-bi-blue/40">
+            <option value="">Semua Status</option>
+            <option value="sudah">Sudah Ambil</option>
+            <option value="belum">Belum Ambil</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnTambah" class="flex-1 sm:flex-none rounded-xl bg-bi-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-bi-blue transition">+ Tambah</button>
+          <button id="btnImport" class="flex-1 sm:flex-none rounded-xl bg-bi-gold px-4 py-2.5 text-sm font-semibold text-bi-navy hover:bg-bi-golddark hover:text-white transition">Import Massal</button>
+          <button id="btnExport" class="flex-1 sm:flex-none rounded-xl border border-bi-line bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-bi-ice transition">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="mt-5 flex items-center justify-between">
+        <h2 class="font-bold text-bi-navy">Daftar Penerima</h2>
+        <span id="tableCount" class="text-xs text-slate-500"></span>
+      </div>
+
+      <div class="mt-3 hidden overflow-hidden rounded-2xl bg-white ring-1 ring-bi-line shadow-sm md:block">
+        <table class="w-full text-sm">
+          <thead class="bg-bi-ice text-left text-xs uppercase tracking-wide text-bi-navy">
+            <tr>
+              <th class="px-4 py-3 font-semibold">No</th>
+              <th class="px-4 py-3 font-semibold">Nama</th>
+              <th class="px-4 py-3 font-semibold">Jurusan</th>
+              <th class="px-4 py-3 font-semibold">Status</th>
+              <th class="px-4 py-3 font-semibold text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-bi-line"></tbody>
+        </table>
+      </div>
+
+      <div id="cardList" class="mt-3 space-y-3 md:hidden"></div>
+
+      <div id="emptyState" hidden class="mt-3 rounded-2xl border-2 border-dashed border-bi-line bg-white/60 p-10 text-center">
+        <p class="font-semibold text-slate-600">Belum ada data</p>
+        <p class="mt-1 text-sm text-slate-400">Tambahkan manual atau import massal dari Excel.</p>
+      </div>
+    </section>
+
+    <!-- ================= FAST MODE ================= -->
+    <section id="viewFast" hidden>
+      <div class="mx-auto max-w-xl">
+        <div class="rounded-2xl bg-gradient-to-br from-bi-navy to-bi-blue p-6 text-white shadow-lg">
+          <p class="text-xs font-semibold uppercase tracking-widest text-bi-gold">Mode Cepat</p>
+          <h2 class="mt-1 text-2xl font-extrabold">Ambil Tas</h2>
+          <p class="mt-1 text-sm text-white/70">Ketik nama peserta, lalu konfirmasi pengambilan.</p>
+
+          <div class="mt-5 flex gap-2">
+            <input id="fastInput" type="text" autocomplete="off"
+              placeholder="Contoh: Ahmad Fikri"
+              class="w-full rounded-xl border-0 px-4 py-4 text-lg font-semibold text-bi-navy outline-none focus:ring-4 focus:ring-bi-gold/50" />
+            <button id="fastSearchBtn" class="shrink-0 rounded-xl bg-bi-gold px-5 font-bold text-bi-navy hover:bg-bi-golddark hover:text-white transition">Cari</button>
+          </div>
+          <p class="mt-2 text-xs text-white/50">Ketik sebagian nama, lalu pilih peserta dari daftar.</p>
+        </div>
+
+        <div id="fastResult" class="mt-4 space-y-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mx-auto max-w-6xl px-4 pb-10 pt-4 text-center text-xs text-slate-400">
+    GenBI · Pendataan Pengambilan Tas
+  </footer>
+</div>
+
+<!-- ============ MODAL: PENERIMA ============ -->
+<div id="modalPenerima" hidden class="fixed inset-0 z-[60] grid place-items-end sm:place-items-center bg-bi-navy/50 p-0 sm:p-4">
+  <form id="formPenerima" class="w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl fade-in">
+    <div class="flex items-center justify-between border-b border-bi-line px-5 py-4">
+      <h3 id="modalPenerimaTitle" class="font-bold text-bi-navy">Tambah Penerima</h3>
+      <button type="button" data-close="modalPenerima" class="rounded-lg p-1.5 text-slate-400 hover:bg-bi-ice">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="max-h-[65vh] overflow-y-auto px-5 py-4">
+      <input id="fId" type="hidden" />
+      <label class="block text-sm font-semibold text-slate-700">Nama <span class="text-red-500">*</span></label>
+      <input id="fNama" required class="mt-1 w-full rounded-xl border border-bi-line px-4 py-2.5 outline-none focus:ring-2 focus:ring-bi-blue/40" placeholder="Nama lengkap" />
+
+      <label class="mt-4 block text-sm font-semibold text-slate-700">Jurusan</label>
+      <input id="fJurusan" class="mt-1 w-full rounded-xl border border-bi-line px-4 py-2.5 outline-none focus:ring-2 focus:ring-bi-blue/40" placeholder="Ilmu Komputer" />
+
+      <label class="mt-4 flex items-center gap-3 rounded-xl bg-bi-ice px-4 py-3">
+        <input id="fSudah" type="checkbox" class="h-5 w-5 rounded accent-bi-blue" />
+        <span class="text-sm font-semibold text-bi-navy">Sudah mengambil tas</span>
+      </label>
+
+      <p id="penerimaError" hidden class="mt-3 text-sm text-red-600"></p>
+    </div>
+    <div class="flex gap-2 border-t border-bi-line px-5 py-4">
+      <button type="button" data-close="modalPenerima" class="flex-1 rounded-xl border border-bi-line px-4 py-2.5 font-semibold text-slate-600 hover:bg-bi-ice">Batal</button>
+      <button id="btnPenerimaSave" type="submit" class="flex-1 rounded-xl bg-bi-navy px-4 py-2.5 font-semibold text-white hover:bg-bi-blue disabled:opacity-60">Simpan</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: IMPORT ============ -->
+<div id="modalImport" hidden class="fixed inset-0 z-[60] grid place-items-center bg-bi-navy/50 p-4">
+  <div class="flex max-h-[92vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl fade-in">
+    <div class="flex items-center justify-between border-b border-bi-line px-5 py-4">
+      <div>
+        <h3 class="font-bold text-bi-navy">Import Massal</h3>
+        <p class="text-xs text-slate-500">Copy baris dari Excel / Google Sheets, tempel di bawah.</p>
+      </div>
+      <button type="button" data-close="modalImport" class="rounded-lg p-1.5 text-slate-400 hover:bg-bi-ice">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4">
+      <div id="importStep1">
+        <label class="block text-sm font-semibold text-slate-700">Tempel data</label>
+        <textarea id="importTextarea" rows="8" spellcheck="false"
+          class="mt-1 w-full rounded-xl border border-bi-line px-4 py-3 font-mono text-xs outline-none focus:ring-2 focus:ring-bi-blue/40"
+          placeholder="Nama&#9;Jurusan&#10;Ahmad Fikri&#9;Ilmu Komputer&#10;Siti Aisyah&#9;Manajemen"></textarea>
+        <p class="mt-2 text-xs text-slate-400">Kolom dipisah TAB, baris dipisah enter. Header (No/Nama/Jurusan) otomatis dilewati.</p>
+        <p id="importError" hidden class="mt-2 text-sm text-red-600"></p>
+      </div>
+      <div id="importStep2" hidden>
+        <div id="importSummary" class="flex flex-wrap gap-2"></div>
+        <div class="mt-3 overflow-hidden rounded-xl ring-1 ring-bi-line">
+          <div class="max-h-64 overflow-y-auto">
+            <table class="w-full text-xs">
+              <thead class="sticky top-0 bg-bi-ice text-left uppercase tracking-wide text-bi-navy">
+                <tr>
+                  <th class="px-3 py-2">#</th><th class="px-3 py-2">Nama</th><th class="px-3 py-2">Jurusan</th><th class="px-3 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody id="importPreviewBody" class="divide-y divide-bi-line"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2 border-t border-bi-line px-5 py-4">
+      <button type="button" data-close="modalImport" class="flex-1 rounded-xl border border-bi-line px-4 py-2.5 font-semibold text-slate-600 hover:bg-bi-ice">Tutup</button>
+      <button id="btnPreviewImport" type="button" class="flex-1 rounded-xl bg-bi-navy px-4 py-2.5 font-semibold text-white hover:bg-bi-blue">Preview Data</button>
+      <button id="btnCommitImport" type="button" hidden class="flex-1 rounded-xl bg-bi-gold px-4 py-2.5 font-semibold text-bi-navy hover:bg-bi-golddark hover:text-white disabled:opacity-60">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: KONFIRMASI ============ -->
+<div id="modalConfirm" hidden class="fixed inset-0 z-[65] grid place-items-center bg-bi-navy/50 p-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl fade-in">
+    <div id="confirmIcon" class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-bi-gold/20 text-2xl">✓</div>
+    <h3 id="confirmTitle" class="mt-4 text-lg font-bold text-bi-navy">Konfirmasi</h3>
+    <p id="confirmText" class="mt-1 text-sm text-slate-500"></p>
+    <div class="mt-6 flex gap-2">
+      <button id="btnConfirmNo" type="button" class="flex-1 rounded-xl border border-bi-line px-4 py-2.5 font-semibold text-slate-600 hover:bg-bi-ice">Batal</button>
+      <button id="btnConfirmYes" type="button" class="flex-1 rounded-xl bg-bi-navy px-4 py-2.5 font-semibold text-white hover:bg-bi-blue">Ya</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: PETUGAS ============ -->
+<div id="modalPetugas" hidden class="fixed inset-0 z-[66] grid place-items-center bg-bi-navy/50 p-4">
+  <form id="formPetugas" class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl fade-in">
+    <h3 class="text-lg font-bold text-bi-navy">Nama Petugas</h3>
+    <p class="mt-1 text-sm text-slate-500">Akun admin dipakai bersama. Isi nama Anda agar tercatat di riwayat pengambilan.</p>
+    <input id="inputPetugas" required class="mt-4 w-full rounded-xl border border-bi-line px-4 py-3 outline-none focus:ring-2 focus:ring-bi-blue/40" placeholder="Contoh: Rani / Meja 1" />
+    <button type="submit" class="mt-4 w-full rounded-xl bg-bi-navy px-4 py-3 font-semibold text-white hover:bg-bi-blue">Simpan</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js" onerror="window.__noConfig=true"></script>
+<script src="app.js"></script>
+</body>
+</html>
