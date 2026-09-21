@@ -587,18 +587,11 @@ function switchTab(tab) {
   if (!isDash) setTimeout(() => $('fastInput').focus(), 50);
 }
 
-/* ---------------- auth / boot ---------------- */
+/* ---------------- boot ---------------- */
 
 const showLoading = (v) => { $('screenLoading').hidden = !v; };
 
-function showLogin() {
-  $('screenLogin').hidden = false;
-  $('screenApp').hidden = true;
-  $('screenLoading').hidden = true;
-}
-
 async function enterApp() {
-  $('screenLogin').hidden = true;
   $('screenApp').hidden = false;
   $('screenLoading').hidden = true;
   $('navPetugasName').textContent = getPetugas() || 'Atur petugas';
@@ -610,36 +603,13 @@ async function enterApp() {
 async function boot() {
   if (CONFIGURED) {
     sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
-    const user = await Backend.currentUser();
-    if (user) await enterApp(); else showLogin();
-    sb.auth.onAuthStateChange((_e, session) => {
-      if (session) { state.user = session.user; enterApp(); } else showLogin();
-    });
-  } else {
-    $('demoBanner').hidden = false;
-    await enterApp();
   }
+  await enterApp();
 }
 
 /* ---------------- events ---------------- */
 
 function bindEvents() {
-  $('formLogin').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    $('loginError').hidden = true;
-    const btn = $('btnLogin');
-    btn.disabled = true;
-    try { await Backend.signIn($('loginEmail').value.trim(), $('loginPassword').value); await enterApp(); }
-    catch (err) { $('loginError').textContent = err.message; $('loginError').hidden = false; }
-    finally { btn.disabled = false; }
-  });
-
-  $('btnLogout').addEventListener('click', async () => {
-    await Backend.signOut();
-    state.rows = [];
-    if (CONFIGURED) showLogin(); else location.reload();
-  });
-
   document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
   document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => hideModal(b.dataset.close)));
 
