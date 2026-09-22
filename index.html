@@ -94,6 +94,10 @@
           class="tab-btn rounded-t-lg px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-white/60 hover:text-white">
           Ambil Cepat
         </button>
+        <button data-tab="audit" id="tabAudit"
+          class="tab-btn rounded-t-lg px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-white/60 hover:text-white">
+          Audit Log
+        </button>
         <button id="navPetugasMobile" class="sm:hidden ml-auto my-1 rounded-full bg-white/10 px-3 py-1 text-xs">Petugas</button>
       </nav>
     </div>
@@ -156,7 +160,7 @@
         <div class="flex flex-wrap gap-2">
            <button id="btnTambah" class="flex-1 rounded-xl bg-bi-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-bi-blue sm:flex-none">+ Tambah</button>
            <button id="btnImport" class="flex-1 rounded-xl bg-bi-gold px-4 py-2.5 text-sm font-semibold text-bi-navy shadow-sm transition hover:bg-bi-golddark hover:text-white sm:flex-none">Import Massal</button>
-           <button id="btnExport" class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-bi-ice sm:flex-none">Export CSV</button>
+           <button id="btnExport" class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-bi-ice sm:flex-none">Export Excel</button>
         </div>
       </div>
 
@@ -207,6 +211,97 @@
         </div>
 
         <div id="fastResult" class="mt-4 space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ================= AUDIT LOG ================= -->
+    <section id="viewAudit" hidden>
+      <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-bi-blue">Aktivitas Sistem</p>
+          <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-bi-navy sm:text-3xl">Riwayat Audit Log</h1>
+          <p class="mt-1 text-sm text-slate-500">Rekam jejak setiap aksi pengambilan, pembatalan, perubahan data, dan import tas.</p>
+        </div>
+        <button id="btnRefreshAudit" class="inline-flex items-center gap-2 self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-bi-navy shadow-sm transition hover:bg-bi-ice hover:border-bi-blue/40">
+          <svg class="h-4 w-4 text-bi-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Muat Ulang Log
+        </button>
+      </div>
+
+      <!-- Ringkasan Cepat Log -->
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+          <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Total Log</p>
+          <p id="statAuditTotal" class="mt-1 text-2xl font-extrabold text-bi-navy">0</p>
+        </div>
+        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+          <p class="text-xs font-bold uppercase tracking-wide text-bi-green">Ambil Tas</p>
+          <p id="statAuditAmbil" class="mt-1 text-2xl font-extrabold text-bi-green">0</p>
+        </div>
+        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+          <p class="text-xs font-bold uppercase tracking-wide text-bi-golddark">Batal Ambil</p>
+          <p id="statAuditBatal" class="mt-1 text-2xl font-extrabold text-bi-golddark">0</p>
+        </div>
+        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
+          <p class="text-xs font-bold uppercase tracking-wide text-bi-blue">Edit &amp; Import</p>
+          <p id="statAuditLain" class="mt-1 text-2xl font-extrabold text-bi-blue">0</p>
+        </div>
+      </div>
+
+      <!-- Search & Filter Controls -->
+      <div class="mt-6 flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80 sm:p-5">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="auditSearchInput" type="search" placeholder="Cari nama penerima, petugas, atau aksi…"
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 outline-none transition placeholder:text-slate-400 focus:border-bi-blue focus:bg-white focus:ring-4 focus:ring-bi-blue/10" />
+          </div>
+          <select id="auditFilterAksi" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none transition focus:border-bi-blue focus:bg-white focus:ring-4 focus:ring-bi-blue/10 font-medium text-slate-700">
+            <option value="">Semua Jenis Aksi</option>
+            <option value="ambil">Pengambilan (Ambil)</option>
+            <option value="batal">Pembatalan (Batal)</option>
+            <option value="edit">Perubahan Data (Edit)</option>
+            <option value="impor">Import Massal</option>
+            <option value="tambah">Tambah Manual</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span id="auditCount">Menampilkan 0 log</span>
+          <span class="text-[11px] text-slate-400">Dicatat otomatis dengan zona waktu Asia/Jakarta (WIB)</span>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="auditLoading" hidden class="mt-6 rounded-2xl bg-white p-8 text-center ring-1 ring-slate-200/80">
+        <div class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-bi-blue border-t-transparent"></div>
+        <p class="mt-2 text-sm text-slate-500">Memuat riwayat log...</p>
+      </div>
+
+      <!-- Desktop Table -->
+      <div id="auditTableWrap" class="mt-4 hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80 md:block">
+        <table class="w-full text-sm">
+          <thead class="bg-bi-ice text-left text-xs uppercase tracking-wide text-bi-navy">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Waktu (WIB)</th>
+              <th class="px-4 py-3 font-semibold">Aksi</th>
+              <th class="px-4 py-3 font-semibold">Penerima &amp; Jurusan</th>
+              <th class="px-4 py-3 font-semibold">Petugas (Oleh)</th>
+              <th class="px-4 py-3 font-semibold">Rincian Perubahan</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody" class="divide-y divide-bi-line"></tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="auditCardList" class="mt-4 space-y-3 md:hidden"></div>
+
+      <!-- Empty State -->
+      <div id="auditEmptyState" hidden class="mt-4 rounded-2xl border-2 border-dashed border-bi-line bg-white/60 p-10 text-center">
+        <p class="font-semibold text-slate-600">Belum ada riwayat aktivitas</p>
+        <p class="mt-1 text-sm text-slate-400">Log akan tercatat otomatis setiap kali ada perubahan status atau data.</p>
       </div>
     </section>
   </main>
@@ -316,6 +411,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js" onerror="window.__noConfig=true"></script>
 <script src="app.js"></script>
 </body>
